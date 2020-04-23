@@ -3,7 +3,7 @@
 The NIMS Dataset can be obtained from this source : https://projects.cs.dal.ca/projectx/data/NIMS.arff.zip <br />
 The original NIMS dataset contains 22 trainable features and 1 class feature. In this dataset traffic flow features compose the raw data.  Here the flow is described as the traffic flowing between two hosts at the network layer of the given protocol stack where-in both hosts are using the same five tuple vector (the Source and Destination IP addresses, IP protocol and Source and Destination port numbers) to exchange the traffic. Here the first packet seen will determine the flows beginning while the termination of the given flow depends on either a protocol-based termination mechanism or timeout. Thus, the traffic in the flow can be viewed in the following two ways: 
 
-(i) Traffic from source to destination; and vice-versa 
+(i) Traffic from source to destination
 
 (ii) Traffic from destination to source.
 
@@ -53,7 +53,7 @@ fbyte_rate = total_fcolume/duration (forward byte rate)
 
 bbyte_rate = total_bvolume/duration (backward byte rate)
 
-*Columns after Feature Engineering:*
+**Columns after Feature Engineering:**
 
 | Feature        | Description         |
 |:------------- |:-------------|
