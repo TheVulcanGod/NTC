@@ -1,7 +1,11 @@
 # Description of Dataset #
 
 The NIMS Dataset can be obtained from this source : https://projects.cs.dal.ca/projectx/data/NIMS.arff.zip <br />
-The original NIMS dataset contains 22 trainable features and 1 class feature. < br />
+The original NIMS dataset contains 22 trainable features and 1 class feature. In this dataset traffic flow features compose the raw data.  Here the flow is described as the traffic flowing between two hosts at the network layer of the given protocol stack where-in both hosts are using the same five tuple vector (the Source and Destination IP addresses, IP protocol and Source and Destination port numbers) to exchange the traffic. Here the first packet seen will determine the flows beginning while the termination of the given flow depends on either a protocol-based termination mechanism or timeout. Thus, the traffic in the flow can be viewed in the following two ways: 
+
+(i) Traffic from source to destination; and vice-versa 
+
+(ii) Traffic from destination to source. < br />
 
 min_fpkt	:	Minimum forward packet length
 
@@ -10,7 +14,6 @@ mean_fpktl	:	Mean forward packet length
 max_fpkt	:	Maximum forward packet length
 
 std_fpktl	:	Standard Deviation for forward packet length
-
 
 min_bpktl	:	Minimum backward packet length
 
@@ -41,7 +44,6 @@ duration	: 	Duration
 
 proto		: 	Protocol
 
-
 total_fpackets	:	Total forward packets
 
 total_fvolume	:	Total forward volume
@@ -71,6 +73,25 @@ bpkt_rate = total_bpackets/duration (backward packet rate)
 fbyte_rate = total_fcolume/duration (forward byte rate)
 
 bbyte_rate = total_bvolume/duration (backward byte rate)
+
+### Sampling ###
+For training and testing purposes the data was sampled to maximum 1000 rows per class to avoid imbalanced data-set problem and bias. 
+
+Class|	Number of Samples in Original Data|No of Samples in Sampled Data|
+| :-------------: |:-------------:| :-----:|
+DNS|1439|1000
+FTP|295|295
+HTTP|3470|1000
+LIME|14959|1000
+LFWD|2521|1000
+RFWD|2422|1000
+SCP|2411|1000
+SFTP|2412|1000
+Shell|2004|1000
+TELNET|857|857
+X11|2013|1000
+Total|34803|10152
+
 
 ### Directory Structure ###
 
