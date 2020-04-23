@@ -62,3 +62,51 @@ with open('NIMS.csv', 'rb') as inp, open('dataset_original_cleaned.csv', 'wb') a
 		if '0' not in row:
     writer.writerow(row)
 ```
+The **dataset_original_cleaned.csv** is the rendition of NIMS.arff without any zero values and repeated rows with 22 features. While examining features selected by PCA we figured out the packet length statics dimension were not picked up by PCA. Secondly we noticed, the edge features of min observed times were selected as additional discriminators. We saw the usage based features were selected. Hence we did manual feature engineering and arrived at 12 features. From the 22 features as listed in **Description of Dataset** above we removed the min_fpkt, max_fpkt, min_bpkt, max_bpkt, min_fiat, max_fiat, min_biat, max_biat, total_fpackets, total_bpackets, total_fvolume, total_bvolume and protocol. We added : 
+
+fpkt_rate = total_fpackets/duration (forward packet rate) 
+
+bpkt_rate = total_bpackets/duration (backward packet rate)
+
+fbyte_rate = total_fcolume/duration (forward byte rate)
+
+bbyte_rate = total_bvolume/duration (backward byte rate)
+
+### Directory Structure ###
+
+```
+dataset
+├── dataset-12-features
+│   ├── class-wise-original
+│   │   ├── dns.csv
+│   │   ├── ftp.csv
+│   │   ├── http.csv
+│   │   ├── lime.csv
+│   │   ├── localforwarding.csv
+│   │   ├── remoteforwarding.csv
+│   │   ├── scp.csv
+│   │   ├── sftp.csv
+│   │   ├── shell.csv
+│   │   ├── telnet.csv
+│   │   └── x11.csv
+│   ├── class-wise-sampled
+│   │   ├── dns.csv
+│   │   ├── ftp.csv
+│   │   ├── http.csv
+│   │   ├── lime.csv
+│   │   ├── localforwarding.csv
+│   │   ├── remoteforwarding.csv
+│   │   ├── scp.csv
+│   │   ├── sftp.csv
+│   │   ├── shell.csv
+│   │   ├── telnet.csv
+│   │   └── x11.csv
+│   ├── original-dataset-cleaned.csv
+│   ├── README.md
+│   └── sampled-dataset.csv
+├── dataset-22-features
+│   ├── original-dataset-cleaned.csv
+│   ├── README.md
+│   └── sampled-dataset.csv
+└── README.md
+```
