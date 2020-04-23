@@ -39,9 +39,9 @@ The original NIMS.arff file contains repeated rows and several zero columns. The
 import csv
 with open('NIMS.csv', 'rb') as inp, open('dataset_original_cleaned.csv', 'wb') as out:
 	writer = csv.writer(out)
-  for row in csv.reader(inp):
+  	for row in csv.reader(inp):
 		if '0' not in row:
-    writer.writerow(row)
+    			writer.writerow(row)
 ```
 The **dataset_original_cleaned.csv** is the rendition of NIMS.arff without any zero values and repeated rows with 22 features. While examining features selected by PCA we figured out the packet length statics dimension were not picked up by PCA. Secondly we noticed, the edge features of min observed times were selected as additional discriminators. We saw the usage based features were selected. Hence we did manual feature engineering and arrived at 12 features. From the 22 features as listed in **Description of Dataset** above we removed the min_fpkt, max_fpkt, min_bpkt, max_bpkt, min_fiat, max_fiat, min_biat, max_biat, total_fpackets, total_bpackets, total_fvolume, total_bvolume and protocol. We added : 
 
