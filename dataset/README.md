@@ -5,7 +5,7 @@ The original NIMS dataset contains 22 trainable features and 1 class feature. In
 
 (i) Traffic from source to destination; and vice-versa 
 
-(ii) Traffic from destination to source. < br />
+(ii) Traffic from destination to source.
 
 | Feature        | Description         |
 |:------------- |:-------------|
@@ -52,6 +52,24 @@ bpkt_rate = total_bpackets/duration (backward packet rate)
 fbyte_rate = total_fcolume/duration (forward byte rate)
 
 bbyte_rate = total_bvolume/duration (backward byte rate)
+
+*Columns after Feature Engineering:*
+
+| Feature        | Description         |
+|:------------- |:-------------|
+mean_fpktl|Mean forward packet length
+std_fpktl|Standard Deviation for forward packet length
+mean_bpktl|Mean backard packet length 
+std_bpktl|Standard Deviation of backward packet length
+mean_fiat|Mean forward inter-packet arrival time
+std_fiat|Standard Deviation for forward inter-packet arrival time
+mean_biat|Mean backward inter-packet arrival time
+std_biat|Standard Deviation for backward inter-packet arrival time
+fpkt_rate|forward packet rate 
+bpkt_rate|backward packet rate
+fbyte_rate|forward byte rate
+bbyte_rate|backward byte rate
+class|TELNET,FTP,HTTP,DNS,lime,localForwarding,remoteForwarding,scp,sftp,x11,shell
 
 ### Sampling ###
 For training and testing purposes the data was sampled to maximum 1000 rows per class to avoid imbalanced data-set problem and bias. 
