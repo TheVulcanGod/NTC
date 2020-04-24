@@ -805,3 +805,18 @@ X-axis: Centroids
 
 ![image](https://user-images.githubusercontent.com/29172884/80219406-0362a400-8660-11ea-8299-aec191fc2af0.png)
 
+**Summary Of Results:**
+
+|Class|Original / Validation DataSet|Sampled/ Modelling DataSet
+|:-----|:----|:-----
+DNS|3|3
+FTP|5|5
+HTTP|6|5
+LIME|5|2
+LFWD|4|4
+RFWD|4|4
+SCP|4|4
+SFTP|5|5
+Shell|4|4
+TELNET|5|5
+X11|4|5
