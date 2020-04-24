@@ -375,4 +375,230 @@ Map to class id and class name:
     9  :  shell
     10 :  x11
 ```
+#### 7.MLP-16-features-selected-from-DT.ipynb ####
+This jupyter notebook classifies the 11 classes using the sampled-dataset but uses only 16/22 trainable features since only these 16 were present in the nodes of the decision tree which was used to classify the sampled-dataset with 22 features.
 
+The decision tree was made using WEKA. More information on WEKA can be found here: https://www.cs.waikato.ac.nz/ml/weka/
+
+**Decision Tree Result:**
+
+```
+=== Run information ===
+
+Scheme:       weka.classifiers.trees.J48 -C 0.25 -M 2
+Relation:     sampled-dataset
+Instances:    10152
+Attributes:   23
+              min_fpktl
+              mean_fpktl
+              max_fpktl
+              std_fpktl
+              min_bpktl
+              mean_bpktl
+              max_bpktl
+              std_bpktl
+              min_fiat
+              mean_fiat
+              max_fiat
+              std_fiat
+              min_biat
+              mean_biat
+              max_biat
+              std_biat
+              duration
+              proto
+              total_fpackets
+              total_fvolume
+              total_bpackets
+              total_bvolume
+              class
+Test mode:    split 80.0% train, remainder test
+
+=== Classifier model (full training set) ===
+
+J48 pruned tree
+------------------
+
+mean_fpktl <= 1404
+|   max_fpktl <= 175
+|   |   proto <= 6
+|   |   |   max_fpktl <= 55
+|   |   |   |   min_fiat <= 137
+|   |   |   |   |   max_fpktl <= 50: TELNET (5.0)
+|   |   |   |   |   max_fpktl > 50: HTTP (4.0)
+|   |   |   |   min_fiat > 137: TELNET (852.0)
+|   |   |   max_fpktl > 55
+|   |   |   |   max_bpktl <= 277
+|   |   |   |   |   max_bpktl <= 52: lime (4.0)
+|   |   |   |   |   max_bpktl > 52: FTP (295.0)
+|   |   |   |   max_bpktl > 277: HTTP (6.0/1.0)
+|   |   proto > 6: DNS (1000.0)
+|   max_fpktl > 175
+|   |   min_fiat <= 9
+|   |   |   proto <= 6
+|   |   |   |   max_fpktl <= 1240: HTTP (27.0)
+|   |   |   |   max_fpktl > 1240
+|   |   |   |   |   max_biat <= 716039
+|   |   |   |   |   |   max_bpktl <= 926
+|   |   |   |   |   |   |   min_biat <= 84: scp (4.0)
+|   |   |   |   |   |   |   min_biat > 84: sftp (2.0/1.0)
+|   |   |   |   |   |   max_bpktl > 926
+|   |   |   |   |   |   |   mean_bpktl <= 222: x11 (2.0)
+|   |   |   |   |   |   |   mean_bpktl > 222: HTTP (4.0)
+|   |   |   |   |   max_biat > 716039: x11 (980.0)
+|   |   |   proto > 6: lime (51.0)
+|   |   min_fiat > 9
+|   |   |   min_fpktl <= 51
+|   |   |   |   std_bpktl <= 136
+|   |   |   |   |   std_fpktl <= 8: HTTP (15.0)
+|   |   |   |   |   std_fpktl > 8
+|   |   |   |   |   |   total_fvolume <= 1117: HTTP (10.0)
+|   |   |   |   |   |   total_fvolume > 1117: lime (748.0/1.0)
+|   |   |   |   std_bpktl > 136
+|   |   |   |   |   min_biat <= 58: lime (103.0)
+|   |   |   |   |   min_biat > 58
+|   |   |   |   |   |   min_fpktl <= 40
+|   |   |   |   |   |   |   min_fiat <= 1317
+|   |   |   |   |   |   |   |   min_biat <= 2938: HTTP (331.0)
+|   |   |   |   |   |   |   |   min_biat > 2938
+|   |   |   |   |   |   |   |   |   total_bpackets <= 6: HTTP (12.0/1.0)
+|   |   |   |   |   |   |   |   |   total_bpackets > 6: lime (2.0)
+|   |   |   |   |   |   |   min_fiat > 1317
+|   |   |   |   |   |   |   |   mean_fiat <= 170106: HTTP (16.0/2.0)
+|   |   |   |   |   |   |   |   mean_fiat > 170106: lime (26.0)
+|   |   |   |   |   |   min_fpktl > 40: lime (18.0)
+|   |   |   min_fpktl > 51
+|   |   |   |   max_fpktl <= 690
+|   |   |   |   |   min_fiat <= 7444: HTTP (393.0)
+|   |   |   |   |   min_fiat > 7444: lime (4.0)
+|   |   |   |   max_fpktl > 690
+|   |   |   |   |   max_fpktl <= 692
+|   |   |   |   |   |   min_fiat <= 58
+|   |   |   |   |   |   |   min_fiat <= 38: shell (20.0)
+|   |   |   |   |   |   |   min_fiat > 38: remoteForwarding (20.0)
+|   |   |   |   |   |   min_fiat > 58
+|   |   |   |   |   |   |   max_bpktl <= 719
+|   |   |   |   |   |   |   |   total_fpackets <= 23
+|   |   |   |   |   |   |   |   |   mean_fpktl <= 140
+|   |   |   |   |   |   |   |   |   |   mean_fiat <= 79899: sftp (4.0/1.0)
+|   |   |   |   |   |   |   |   |   |   mean_fiat > 79899: scp (10.0/1.0)
+|   |   |   |   |   |   |   |   |   mean_fpktl > 140: shell (13.0/2.0)
+|   |   |   |   |   |   |   |   total_fpackets > 23: x11 (4.0)
+|   |   |   |   |   |   |   max_bpktl > 719
+|   |   |   |   |   |   |   |   min_fiat <= 218
+|   |   |   |   |   |   |   |   |   mean_fpktl <= 175
+|   |   |   |   |   |   |   |   |   |   mean_bpktl <= 130
+|   |   |   |   |   |   |   |   |   |   |   std_fpktl <= 189: x11 (3.0)
+|   |   |   |   |   |   |   |   |   |   |   std_fpktl > 189: shell (6.0)
+|   |   |   |   |   |   |   |   |   |   mean_bpktl > 130: shell (924.0/5.0)
+|   |   |   |   |   |   |   |   |   mean_fpktl > 175
+|   |   |   |   |   |   |   |   |   |   std_biat <= 153491
+|   |   |   |   |   |   |   |   |   |   |   mean_fpktl <= 203: shell (37.0/1.0)
+|   |   |   |   |   |   |   |   |   |   |   mean_fpktl > 203: x11 (4.0/1.0)
+|   |   |   |   |   |   |   |   |   |   std_biat > 153491: x11 (3.0)
+|   |   |   |   |   |   |   |   min_fiat > 218
+|   |   |   |   |   |   |   |   |   min_fiat <= 1167: shell (9.0/2.0)
+|   |   |   |   |   |   |   |   |   min_fiat > 1167: scp (3.0/1.0)
+|   |   |   |   |   max_fpktl > 692
+|   |   |   |   |   |   min_biat <= 39: lime (32.0)
+|   |   |   |   |   |   min_biat > 39
+|   |   |   |   |   |   |   mean_fpktl <= 910: HTTP (187.0/2.0)
+|   |   |   |   |   |   |   mean_fpktl > 910: lime (3.0/1.0)
+mean_fpktl > 1404
+|   max_fpktl <= 1500
+|   |   max_bpktl <= 769
+|   |   |   mean_bpktl <= 57: scp (978.0/1.0)
+|   |   |   mean_bpktl > 57
+|   |   |   |   std_bpktl <= 45: sftp (987.0)
+|   |   |   |   std_bpktl > 45
+|   |   |   |   |   min_fiat <= 5
+|   |   |   |   |   |   min_biat <= 59: scp (2.0)
+|   |   |   |   |   |   min_biat > 59: sftp (6.0/1.0)
+|   |   |   |   |   min_fiat > 5: scp (2.0)
+|   |   max_bpktl > 769
+|   |   |   mean_fiat <= 10898: localForwarding (991.0)
+|   |   |   mean_fiat > 10898
+|   |   |   |   max_fpktl <= 1492: lime (5.0)
+|   |   |   |   max_fpktl > 1492: localForwarding (5.0)
+|   max_fpktl > 1500: remoteForwarding (980.0)
+
+Number of Leaves  : 	52
+
+Size of the tree : 	103
+
+
+Time taken to build model: 0.3 seconds
+
+=== Evaluation on test split ===
+
+Time taken to test model on test split: 0.02 seconds
+
+=== Summary ===
+
+Correctly Classified Instances        2012               99.1133 %
+Incorrectly Classified Instances        18                0.8867 %
+Kappa statistic                          0.9902
+Mean absolute error                      0.0019
+Root mean squared error                  0.0388
+Relative absolute error                  1.147  %
+Root relative squared error             13.5395 %
+Total Number of Instances             2030     
+```
+
+Features used to train model: **min_fpktl, mean_fpktl, max_fpktl, std_fpktl, mean_bpktl, max_bpktl, std_bpktl, min_fiat,  mean_fiat, min_biat, max_biat, std_biat, proto, total_fpackets, total_fvolume, total_bpackets**
+
+Link to sampled dataset :https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-22-features/sampled-dataset.csv 
+
+This dataset has 22 trainable features, 1 class feature and 10152 rows. For more information on this dataset refer https://github.com/TheVulcanGod/NTC/tree/master/dataset#sampling . 
+
+The training and testing split was 80:20 ratio of the sampled-dataset.csv(22 features).
+
+##### Results #####
+
+```
+
+        class    precision  recall  f1-score   support
+
+           0       1.00      1.00      1.00       209
+           1       0.97      0.94      0.95        67
+           2       0.96      0.99      0.97       171
+           3       0.98      0.99      0.99       170
+           4       1.00      0.96      0.98       225
+           5       1.00      0.99      1.00       199
+           6       1.00      1.00      1.00       201
+           7       0.99      0.98      0.98       186
+           8       0.99      0.99      0.99       232
+           9       0.98      0.99      0.99       192
+          10       0.99      0.98      0.99       179
+
+    accuracy                           0.99      2031
+   macro avg       0.99      0.98      0.99      2031
+weighted avg       0.99      0.99      0.99      2031
+
+Confusion Matrix:
+
+[[209   0   0   0   0   0   0   0   0   0   0]
+ [  0  63   0   4   0   0   0   0   0   0   0]
+ [  0   0 170   0   1   0   0   0   0   0   0]
+ [  0   1   0 169   0   0   0   0   0   0   0]
+ [  0   1   7   0 217   0   0   0   0   0   0]
+ [  0   0   0   0   0 198   1   0   0   0   0]
+ [  0   0   0   0   0   0 200   0   0   1   0]
+ [  0   0   1   0   0   0   0 182   3   0   0]
+ [  0   0   0   0   0   0   0   2 230   0   0]
+ [  0   0   0   0   0   0   0   0   0 191   1]
+ [  0   0   0   0   0   0   0   0   0   3 176]]
+ 
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
