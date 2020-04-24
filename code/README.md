@@ -32,7 +32,7 @@ The training and testing split was 80:20.
 ##### Results #####
 
 ```
-        class    precision recall  f1-score   support
+        class    precision  recall  f1-score   support
 
            0       1.00      1.00      1.00       199
            1       0.97      0.97      0.97        68
@@ -152,7 +152,7 @@ The training and testing split was 80:20 ratio of the sampled-dataset.csv(22 fea
 ##### Results #####
 
 ```
-         class  precision    recall  f1-score   support
+         class  precision   recall  f1-score   support
 
            0       0.68      0.81      0.74       178
            1       0.80      0.20      0.32        61
@@ -197,3 +197,182 @@ Map to class id and class name:
     9  :  shell
     10 :  x11
 ```
+
+#### 4.MLP-PCA-N=5.ipynb ####
+This jupyter notebook classifies the 11 classes using the sampled-dataset but uses only 5/22 trainable features since these 5 were identified as the top 5 features after running PCA.
+
+Features used to train model: **mean_fiat, std_fiat, mean_biat, std_biat, total_bpackets**
+
+Link to sampled dataset :https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-22-features/sampled-dataset.csv 
+
+This dataset has 22 trainable features, 1 class feature and 10152 rows. For more information on this dataset refer https://github.com/TheVulcanGod/NTC/tree/master/dataset#sampling . 
+
+The training and testing split was 80:20 ratio of the sampled-dataset.csv(22 features).
+
+##### Results #####
+
+```
+         class   precision  recall  f1-score   support
+
+           0       0.84      0.76      0.80       208
+           1       0.88      0.25      0.39        55
+           2       0.63      0.64      0.63       193
+           3       0.85      0.96      0.90       174
+           4       0.75      0.73      0.74       199
+           5       0.97      0.89      0.93       215
+           6       0.97      0.95      0.96       204
+           7       0.64      0.70      0.67       191
+           8       0.75      0.74      0.75       217
+           9       0.71      0.88      0.79       190
+          10       0.97      0.97      0.97       185
+
+    accuracy                           0.81      2031
+   macro avg       0.81      0.77      0.78      2031
+weighted avg       0.81      0.81      0.80      2031
+
+Confusion Matrix:
+
+[[159   0  16  11  19   0   0   0   0   2   1]
+ [  2  14   7   5   4   0   0   0   0  22   1]
+ [ 11   2 124   2  20   1   1   0   0  31   1]
+ [  1   0   3 167   0   0   0   0   0   3   0]
+ [ 16   0  22  11 145   0   1   1   0   2   1]
+ [  0   0   0   0   0 192   0  21   2   0   0]
+ [  0   0   2   0   1   0 194   0   1   4   2]
+ [  0   0   1   0   1   4   2 134  49   0   0]
+ [  0   0   2   0   0   0   0  55 160   0   0]
+ [  0   0  21   0   2   0   0   0   0 167   0]
+ [  0   0   0   0   2   0   1   0   0   3 179]]
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
+
+#### 5.MLP-PCA-N=7.ipynb ####
+This jupyter notebook classifies the 11 classes using the sampled-dataset but uses only 7/22 trainable features since these 7 were identified as the top 7 features after running PCA.
+
+Features used to train model: **mean_fiat, std_fiat, mean_biat, std_biat, total_bpackets, total_fpackets, total_fvolume**
+
+Link to sampled dataset :https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-22-features/sampled-dataset.csv 
+
+This dataset has 22 trainable features, 1 class feature and 10152 rows. For more information on this dataset refer https://github.com/TheVulcanGod/NTC/tree/master/dataset#sampling . 
+
+The training and testing split was 80:20 ratio of the sampled-dataset.csv(22 features).
+
+##### Results #####
+
+```
+        class    precision  recall  f1-score   support
+
+           0       0.78      0.83      0.80       205
+           1       0.89      0.27      0.41        63
+           2       0.66      0.62      0.64       197
+           3       0.90      0.91      0.91       179
+           4       0.72      0.70      0.71       202
+           5       0.89      0.99      0.94       189
+           6       0.99      0.95      0.97       190
+           7       0.86      0.81      0.84       203
+           8       0.84      0.79      0.81       196
+           9       0.72      0.90      0.80       200
+          10       0.95      0.99      0.97       207
+
+    accuracy                           0.83      2031
+   macro avg       0.84      0.80      0.80      2031
+weighted avg       0.83      0.83      0.82      2031
+
+Confusion Matrix:
+
+[[171   2   9   3  16   0   0   0   0   4   0]
+ [  7  17   9   3   6   0   0   0   0  19   2]
+ [ 11   0 122   3  17   3   1   0   0  37   3]
+ [ 11   0   0 163   3   0   0   0   0   2   0]
+ [ 18   0  23   9 142   0   0   0   0   5   5]
+ [  0   0   0   0   0 187   0   2   0   0   0]
+ [  1   0   4   0   4   0 180   0   0   1   0]
+ [  0   0   3   0   1   4   0 165  29   0   1]
+ [  1   0   1   0   0  15   0  25 154   0   0]
+ [  0   0  15   0   6   0   0   0   0 179   0]
+ [  0   0   0   0   1   0   0   0   0   2 204]]
+ 
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
+#### 6.MLP-PCA-N=10.ipynb ####
+This jupyter notebook classifies the 11 classes using the sampled-dataset but uses only 10/22 trainable features since these 10 were identified as the top 10 features after running PCA.
+
+Features used to train model: **min_fiat, mean_fiat, std_fiat, min_biat, mean_biat, std_biat,  total_bpackets, total_fpackets, total_fvolume, proto**
+
+Link to sampled dataset :https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-22-features/sampled-dataset.csv 
+
+This dataset has 22 trainable features, 1 class feature and 10152 rows. For more information on this dataset refer https://github.com/TheVulcanGod/NTC/tree/master/dataset#sampling . 
+
+The training and testing split was 80:20 ratio of the sampled-dataset.csv(22 features).
+
+##### Results #####
+
+```
+          class   precision recall  f1-score   support
+
+           0       0.96      0.98      0.97       196
+           1       0.78      0.26      0.40        68
+           2       0.71      0.80      0.75       198
+           3       0.96      0.98      0.97       164
+           4       0.93      0.86      0.89       189
+           5       0.98      0.96      0.97       203
+           6       1.00      0.97      0.98       209
+           7       0.85      0.72      0.78       200
+           8       0.75      0.86      0.80       200
+           9       0.79      0.91      0.84       220
+          10       0.96      0.97      0.97       184
+
+    accuracy                           0.88      2031
+   macro avg       0.88      0.84      0.85      2031
+weighted avg       0.88      0.88      0.87      2031
+
+Confusion Matrix:
+
+[[192   0   0   0   4   0   0   0   0   0   0]
+ [  0  18  29   1   3   0   0   0   0  17   0]
+ [  0   4 158   3   4   0   0   0   0  26   3]
+ [  0   0   3 160   1   0   0   0   0   0   0]
+ [  7   1  10   3 163   0   0   0   0   2   3]
+ [  0   0   1   0   0 194   0   0   7   1   0]
+ [  0   0   1   0   1   0 202   0   0   5   0]
+ [  0   0   1   0   0   4   0 144  51   0   0]
+ [  0   0   0   0   0   0   0  26 173   1   0]
+ [  0   0  18   0   0   0   0   0   0 201   1]
+ [  0   0   2   0   0   0   0   0   0   3 179]]
+ 
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
+
