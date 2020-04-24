@@ -667,3 +667,75 @@ Map to class id and class name:
     10 :  x11
 ```
 Since the testimg accuracy is 96% we can say that the samplimg was good and it is a good representation of the original data.
+
+#### 9.DecisionTree-sampled-vs-original-12-features.ipynb ####
+
+This jupyter notebook classifies the 11 classes using the sampled-dataset(12 features) using a decision tree. This decision tree is then used to test the original-dataset(12 features). The aim of this experiment is to find out how good our sampling was and how close is it to the original-dataset-cleaned. We use the sampled and original dataset which were feature engineered to have 12 features.
+
+For information on Feature Engineering: https://github.com/TheVulcanGod/NTC/tree/master/dataset#feature-engineering
+
+Link to sampled dataset(12 features): https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-12-features/sampled-dataset.csv
+
+The sampled dataset has 12 trainable features and 1 class feature. It has 10152 rows.
+
+Link to original dataset(12 features): https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-12-features/original-dataset-cleaned.csv 
+
+The original dataset has 12 trainable features and 1 class feature. It has 34803 rows.
+
+Data used to build the decision tree    :sampled-dataset.csv 
+Data used to test the decision tree     :original-dataset-cleaned.csv
+
+**Built Decision Tree:**
+
+![DT](https://user-images.githubusercontent.com/29172884/80209408-aa8b0f80-864f-11ea-8de6-cad70bdc4a91.png)
+```
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
+
+##### Results #####
+
+```
+Accuracy :  97.03761170014079
+Report :                    precision    recall  f1-score   support
+
+             DNS       1.00      1.00      1.00      1439
+             FTP       0.94      1.00      0.97       295
+            HTTP       0.85      0.94      0.90      3470
+          TELNET       1.00      1.00      1.00       857
+            lime       0.99      0.95      0.97     14959
+ localForwarding       0.98      0.99      0.99      2521
+remoteForwarding       0.98      0.99      0.99      2422
+             scp       0.97      1.00      0.98      2411
+            sftp       0.98      0.99      0.99      2412
+           shell       0.98      0.99      0.98      2004
+             x11       0.96      0.99      0.97      2013
+
+        accuracy                           0.97     34803
+       macro avg       0.97      0.99      0.98     34803
+    weighted avg       0.97      0.97      0.97     34803
+
+Confusion Matrix:
+ [[ 1438     1     0     0     0     0     0     0     0     0     0]
+ [    0   295      0     0     0     0     0     0     0     0     0]
+ [    0     1   3269     0   110     1     7     9     6    19    48]
+ [    0     0      0   857     0     0     0     0     0     0     0]
+ [    2    16    530     0 14239    25    38    41    30    10    28]
+ [    0     0      2     0     0  2506     0     5     8     0     0]
+ [    0     0      7     0     5     0  2406     1     0     3     0]
+ [    0     0      2     0     2     3     0  2399     3     1     1]
+ [    0     0      4     0     2     8     0     9  2389     0     0]
+ [    1     0      6     0     4     0     1     1     1  1980    10]
+ [    0     0     10     0     3     2     0     0     0     4  1994]]
+```
+Since the testing accuracy is 97% we can say that the samplimg was good and it is a good representation of the original data.
