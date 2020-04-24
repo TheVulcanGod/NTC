@@ -20,7 +20,7 @@ Jupyter Notebook:
 
 ### Description of Notebooks ###
 
-##### 1.MLP-22-features.ipynb #####
+#### 1.MLP-22-features.ipynb ####
 This jupyter notebook classifies the 11 classes using the sampled-dataset.
 
 Link to sampled dataset :https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-22-features/sampled-dataset.csv 
@@ -29,3 +29,111 @@ This dataset has 22 trainable features, 1 class feature and 10152 rows. For more
 
 The training and testing split was 80:20.
 
+##### Results #####
+
+```
+        class    precision recall  f1-score   support
+
+           0       1.00      1.00      1.00       199
+           1       0.97      0.97      0.97        68
+           2       0.97      1.00      0.98       221
+           3       0.99      0.99      0.99       165
+           4       0.99      0.97      0.98       201
+           5       1.00      0.99      1.00       194
+           6       0.99      1.00      1.00       192
+           7       1.00      0.95      0.98       208
+           8       0.95      1.00      0.98       200
+           9       0.98      0.99      0.99       200
+          10       1.00      0.97      0.99       183
+
+    accuracy                           0.99      2031
+   macro avg       0.99      0.99      0.99      2031
+weighted avg       0.99      0.99      0.99      2031
+
+Confusion Matrix:
+
+[[199   0   0   0   0   0   0   0   0   0   0]
+ [  0  66   0   2   0   0   0   0   0   0   0]
+ [  0   0 220   0   1   0   0   0   0   0   0]
+ [  0   1   0 164   0   0   0   0   0   0   0]
+ [  0   1   5   0 195   0   0   0   0   0   0]
+ [  0   0   0   0   0 193   1   0   0   0   0]
+ [  0   0   0   0   0   0 192   0   0   0   0]
+ [  0   0   0   0   0   0   0 198  10   0   0]
+ [  0   0   0   0   0   0   0   0 200   0   0]
+ [  0   0   1   0   0   0   0   0   0 199   0]
+ [  0   0   0   0   0   0   0   0   0   5 178]]
+
+Map to class id and class name: 
+    0:  DNS
+    1:  FTP
+    2:  HTTP
+    3:  TELNET
+    4:  lime
+    5:  localForwarding
+    6:  remoteForwarding
+    7:  scp
+    8:  sftp
+    9:  shell
+    10: x11
+```
+
+#### MLP-PCA-N=3.ipynb ####
+This jupyter notebook classifies the 11 classes using the sampled-dataset but uses only 3/22 trainable features since these 3 were identified as the top 3 features after running PCA.
+
+Features used to train model: **mean_biat, std_fiat , mean_fiat**
+
+Link to sampled dataset :https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-22-features/sampled-dataset.csv 
+
+This dataset has 22 trainable features, 1 class feature and 10152 rows. For more information on this dataset refer https://github.com/TheVulcanGod/NTC/tree/master/dataset#sampling . 
+
+The training and testing split was 80:20 ratio of the sampled-dataset.csv(22 features).
+
+##### Results #####
+
+```
+        class  precision    recall  f1-score   support
+
+           0       0.71      0.70      0.71       223
+           1       1.00      0.01      0.03        67
+           2       0.60      0.48      0.53       197
+           3       0.75      0.93      0.83       173
+           4       0.60      0.53      0.56       197
+           5       0.96      0.91      0.94       185
+           6       0.99      0.96      0.98       188
+           7       0.80      0.30      0.44       210
+           8       0.58      1.00      0.73       204
+           9       0.64      0.94      0.76       187
+          10       0.94      0.93      0.93       200
+
+    accuracy                           0.74      2031
+   macro avg       0.78      0.70      0.68      2031
+weighted avg       0.76      0.74      0.71      2031
+
+Confusion Matrix:
+
+[[157   0  22  17  25   0   0   0   0   2   0]
+ [  4   1  10  13  15   0   0   0   0  23   1]
+ [ 19   0  95   3  22   7   0   0   0  45   6]
+ [ 11   0   0 161   1   0   0   0   0   0   0]
+ [ 25   0  25  21 105   0   0   0   0  19   2]
+ [  0   0   0   0   0 169   0  15   1   0   0]
+ [  1   0   2   0   0   0 181   1   2   0   1]
+ [  1   0   0   1   1   0   1  63 143   0   0]
+ [  0   0   1   0   0   0   0   0 203   0   0]
+ [  1   0   3   0   6   0   0   0   0 176   1]
+ [  1   0   1   0   0   0   1   0   0  12 185]]
+
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
