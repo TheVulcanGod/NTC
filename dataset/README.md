@@ -43,7 +43,29 @@ with open('NIMS.csv', 'rb') as inp, open('dataset_original_cleaned.csv', 'wb') a
 		if '0' not in row:
     			writer.writerow(row)
 ```
-The **dataset_original_cleaned.csv** is the rendition of NIMS.arff without any zero values and repeated rows with 22 features. While examining features selected by PCA we figured out the packet length statics dimension were not picked up by PCA. Secondly we noticed, the edge features of min observed times were selected as additional discriminators. We saw the usage based features were selected. Hence we did manual feature engineering and arrived at 12 features. From the 22 features as listed in **Description of Dataset** above we removed the min_fpkt, max_fpkt, min_bpkt, max_bpkt, min_fiat, max_fiat, min_biat, max_biat, total_fpackets, total_bpackets, total_fvolume, total_bvolume and protocol. We added : 
+The **dataset_original_cleaned.csv** is the rendition of NIMS.arff without any zero values and repeated rows with 22 features. 
+
+### Sampling ###
+For training and testing purposes the data was sampled to maximum 1000 rows per class to avoid imbalanced data-set problem and bias. 
+
+Class|	Number of Samples in original-dataset-cleaned|No of Samples in sampled-dataset|
+| :-------------: |:-------------:| :-----:|
+DNS|1439|1000
+FTP|295|295
+HTTP|3470|1000
+LIME|14959|1000
+LFWD|2521|1000
+RFWD|2422|1000
+SCP|2411|1000
+SFTP|2412|1000
+Shell|2004|1000
+TELNET|857|857
+X11|2013|1000
+Total|34803|10152
+
+#### Feature Engineering ####
+
+While examining features selected by PCA we figured out the packet length statics dimension were not picked up by PCA. Secondly we noticed, the edge features of min observed times were selected as additional discriminators. We saw the usage based features were selected. Hence we did manual feature engineering and arrived at 12 features. From the 22 features as listed in **Description of Dataset** above we removed the min_fpkt, max_fpkt, min_bpkt, max_bpkt, min_fiat, max_fiat, min_biat, max_biat, total_fpackets, total_bpackets, total_fvolume, total_bvolume and protocol. We added : 
 
 fpkt_rate = total_fpackets/duration (forward packet rate) 
 
@@ -71,24 +93,7 @@ fbyte_rate|forward byte rate
 bbyte_rate|backward byte rate
 class|TELNET,FTP,HTTP,DNS,lime,localForwarding,remoteForwarding,scp,sftp,x11,shell
 
-### Sampling ###
-For training and testing purposes the data was sampled to maximum 1000 rows per class to avoid imbalanced data-set problem and bias. 
-
-Class|	Number of Samples in Original Data|No of Samples in Sampled Data|
-| :-------------: |:-------------:| :-----:|
-DNS|1439|1000
-FTP|295|295
-HTTP|3470|1000
-LIME|14959|1000
-LFWD|2521|1000
-RFWD|2422|1000
-SCP|2411|1000
-SFTP|2412|1000
-Shell|2004|1000
-TELNET|857|857
-X11|2013|1000
-Total|34803|10152
-
+After feature engineering we have two versions of original-dataset-cleaned.csv and sampled-dataset.csv wach with 22-features(original features) and 12-features(engineered features).
 
 ### Directory Structure ###
 
