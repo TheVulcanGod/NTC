@@ -12,7 +12,7 @@
 9.DecisionTree-sampled-vs-original-12-features.ipynb <br />
 10.Kmeans.ipynb <br />
 
-Note: After cloning the repo use Jupyter Notebook or any other similar software to the ipynb notebooks.
+Note: After cloning the repo use Jupyter Notebook or any other similar software to run the ipynb notebooks.
 
 ### Dependencies ###
 
