@@ -12,11 +12,27 @@
 9.DecisionTree-sampled-vs-original-12-features.ipynb <br />
 10.Kmeans.ipynb <br />
 
+Note: After cloning the repo use Jupyter Notebook or any other similar software to the ipynb notebooks.
+
 ### Dependencies ###
 
-Jupyter Notebook:
+Jupyter Notebook: https://jupyter.org/
 
+tensorflow: https://www.tensorflow.org/
 
+keras: https://keras.io/
+
+numpy: https://numpy.org/
+
+pandas: https://pandas.pydata.org/
+
+matplotlib: https://matplotlib.org/
+
+scipy: https://www.scipy.org/
+
+seaborn: https://seaborn.pydata.org/
+
+sklearn: https://scikit-learn.org/stable/
 
 ### Description of Notebooks ###
 
