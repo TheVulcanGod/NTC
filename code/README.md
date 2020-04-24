@@ -602,3 +602,68 @@ Map to class id and class name:
     9  :  shell
     10 :  x11
 ```
+#### 8.MLP-12-feature-sampled-train-original-test.ipynb ####
+This jupyter notebook classifies the 11 classes using the sampled-dataset(12 features). The aim of this experiment is to find out how good our sampling was and how close is it to the original-dataset-cleaned. We use the sampled and original dataset which were feature engineered to have 12 features.
+
+For information on Feature Engineering: https://github.com/TheVulcanGod/NTC/tree/master/dataset#feature-engineering
+
+Link to sampled dataset(12 features): https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-12-features/sampled-dataset.csv
+
+The sampled dataset has 12 trainable features and 1 class feature. It has 10152 rows.
+
+Link to original dataset(12 features): https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-12-features/original-dataset-cleaned.csv 
+
+The original dataset has 12 trainable features and 1 class feature. It has 34803 rows.
+
+Training data: 100% of sampled-dataset.csv
+Testing data: 100% of original-dataset-cleaned.csv
+
+##### Results #####
+
+```
+        class    precision  recall  f1-score   support
+
+           0       0.98      1.00      0.99      1439
+           1       0.84      0.96      0.89       295
+           2       0.79      0.95      0.87      3470
+           3       0.92      0.99      0.96       857
+           4       1.00      0.94      0.97     14959
+           5       0.99      1.00      0.99      2521
+           6       0.99      0.98      0.99      2422
+           7       1.00      0.92      0.96      2411
+           8       0.94      0.99      0.96      2412
+           9       0.94      0.99      0.96      2004
+          10       0.98      0.98      0.98      2013
+
+    accuracy                           0.96     34803
+   macro avg       0.94      0.97      0.96     34803
+weighted avg       0.96      0.96      0.96     34803
+
+Confusion Matrix:
+
+[[ 1435     3     0     0     1     0     0     0     0     0     0]
+ [   10   284     0     0     1     0     0     0     0     0     0]
+ [    1    10  3299    14    51     0     1     0     0    72    22]
+ [    0     9     0   848     0     0     0     0     0     0     0]
+ [   15    34   754    54 14059     0    14     0     0    24     5]
+ [    0     0     1     0     1  2515     0     0     2     2     0]
+ [    0     0    29     0    13     0  2371     0     0     9     0]
+ [    0     0    35     1     0     8     0  2219   147     0     1]
+ [    0     0    14     0     1    12     0     5  2377     2     1]
+ [    0     0    13     0     1     0     0     0     0  1984     6]
+ [    0     0     7     0     0     0     0     0     3    26  1977]]
+ 
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
+Since the testimg accuracy is 96% we can say that the samplimg was good and it is a good representation of the original data.
