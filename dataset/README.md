@@ -93,7 +93,7 @@ fbyte_rate|forward byte rate
 bbyte_rate|backward byte rate
 class|TELNET,FTP,HTTP,DNS,lime,localForwarding,remoteForwarding,scp,sftp,x11,shell
 
-After feature engineering we have two versions of original-dataset-cleaned.csv and sampled-dataset.csv wach with 22-features(original features) and 12-features(engineered features).
+After feature engineering we have two versions of **original-dataset-cleaned.csv** and **sampled-dataset.csv** each with 22-features(original features) and 12-features(engineered features).
 
 ### Directory Structure ###
 
