@@ -741,3 +741,42 @@ Confusion Matrix:
  [    0     0     10     0     3     2     0     0     0     4  1994]]
 ```
 Since the testing accuracy is 97% we can say that the samplimg was good and it is a good representation of the original data.
+
+#### 10.Kmeans.ipynb ####
+The aim of this experiment is to find out how good our sampling was and how close is it to the original-dataset-cleaned. the premise is that if the number of centroids for each individual class remians the same in the original and sampled dataset then we can say that the sampled dataset closely represents the original data. Thenumber of centroids are found using the elbow method.
+
+More information on elbow method: https://www.scikit-yb.org/en/latest/api/cluster/elbow.html
+
+We used the feature engineered(12 features) sampled-dataset.csv and original-dataset-cleaned.csv. We separated the sampled-dataset.csv and original-dataset-cleaned.csv into the individual classes and used them in this expermient. The link to the datasets are 
+
+Class wise 12-feature sampled-dataset.csv: https://github.com/TheVulcanGod/NTC/tree/master/dataset/dataset-12-features/class-wise-original
+
+
+Class wise 12-feature original-dataset-cleaned.csv: https://github.com/TheVulcanGod/NTC/tree/master/dataset/dataset-12-features/class-wise-original
+
+##### Class-Wise Results #####
+
+X-axis: Centroids
+
+![image](https://user-images.githubusercontent.com/29172884/80218925-73245f00-865f-11ea-905e-211d3857ba95.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219054-a49d2a80-865f-11ea-9cb8-e8b44f7d5eb7.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219106-aff05600-865f-11ea-995f-f344907ea974.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219158-bd0d4500-865f-11ea-9e85-4da07eb61db3.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219201-c8607080-865f-11ea-8df1-1ce73c1add72.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219233-cf877e80-865f-11ea-85eb-606c61d34bc2.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219296-e29a4e80-865f-11ea-9adc-f2b72fefc7c2.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219329-ea59f300-865f-11ea-9815-c852f0b66a1f.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219361-f34ac480-865f-11ea-8bb5-2b71a289ebe6.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219390-fba2ff80-865f-11ea-9c63-e2eca10006e6.png)
+
+![image](https://user-images.githubusercontent.com/29172884/80219406-0362a400-8660-11ea-8299-aec191fc2af0.png)
+
