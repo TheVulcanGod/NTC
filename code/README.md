@@ -78,7 +78,7 @@ Map to class id and class name:
     10: x11
 ```
 
-#### MLP-PCA-N=3.ipynb ####
+#### 2.MLP-PCA-N=3.ipynb ####
 This jupyter notebook classifies the 11 classes using the sampled-dataset but uses only 3/22 trainable features since these 3 were identified as the top 3 features after running PCA.
 
 Features used to train model: **mean_biat, std_fiat , mean_fiat**
@@ -123,6 +123,66 @@ Confusion Matrix:
  [  0   0   1   0   0   0   0   0 203   0   0]
  [  1   0   3   0   6   0   0   0   0 176   1]
  [  1   0   1   0   0   0   1   0   0  12 185]]
+
+Map to class id and class name: 
+    0  :  DNS
+    1  :  FTP
+    2  :  HTTP
+    3  :  TELNET
+    4  :  lime
+    5  :  localForwarding
+    6  :  remoteForwarding
+    7  :  scp
+    8  :  sftp
+    9  :  shell
+    10 :  x11
+```
+
+#### 3.MLP-PCA-N=4.ipynb ####
+This jupyter notebook classifies the 11 classes using the sampled-dataset but uses only 4/22 trainable features since these 4 were identified as the top 4 features after running PCA.
+
+Features used to train model: **mean_biat, std_fiat , mean_fiat, total_fvolume**
+
+Link to sampled dataset :https://github.com/TheVulcanGod/NTC/blob/master/dataset/dataset-22-features/sampled-dataset.csv 
+
+This dataset has 22 trainable features, 1 class feature and 10152 rows. For more information on this dataset refer https://github.com/TheVulcanGod/NTC/tree/master/dataset#sampling . 
+
+The training and testing split was 80:20 ratio of the sampled-dataset.csv(22 features).
+
+##### Results #####
+
+```
+         class  precision    recall  f1-score   support
+
+           0       0.68      0.81      0.74       178
+           1       0.80      0.20      0.32        61
+           2       0.60      0.58      0.59       192
+           3       0.87      0.88      0.87       175
+           4       0.68      0.51      0.58       218
+           5       0.99      0.86      0.92       221
+           6       0.98      0.91      0.95       200
+           7       0.66      0.56      0.60       197
+           8       0.62      0.78      0.69       205
+           9       0.64      0.93      0.76       196
+          10       0.91      0.92      0.92       188
+
+    accuracy                           0.75      2031
+   macro avg       0.77      0.72      0.72      2031
+weighted avg       0.77      0.75      0.75      2031
+
+Confusion Matrix:
+
+[[145   0  13   3  15   0   0   0   0   2   0]
+ [  2  12  13   8   6   0   0   0   0  19   1]
+ [ 16   0 112   2  22   0   0   0   0  39   1]
+ [  7   0   3 154   8   0   0   0   0   3   0]
+ [ 34   3  28  11 112   0   1   1   0  27   1]
+ [  0   0   1   0   0 190   0  22   8   0   0]
+ [  3   0   4   0   2   0 182   0   4   3   2]
+ [  1   0   1   0   0   1   0 110  82   0   2]
+ [  0   0   2   0   0   0   0  34 160   0   9]
+ [  1   0   9   0   0   0   2   0   0 183   1]
+ [  3   0   0   0   0   0   0   0   2  10 173]]
 
 Map to class id and class name: 
     0  :  DNS
