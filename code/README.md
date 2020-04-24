@@ -616,6 +616,7 @@ Link to original dataset(12 features): https://github.com/TheVulcanGod/NTC/blob/
 The original dataset has 12 trainable features and 1 class feature. It has 34803 rows.
 
 Training data: 100% of sampled-dataset.csv
+
 Testing data: 100% of original-dataset-cleaned.csv
 
 ##### Results #####
@@ -683,6 +684,7 @@ Link to original dataset(12 features): https://github.com/TheVulcanGod/NTC/blob/
 The original dataset has 12 trainable features and 1 class feature. It has 34803 rows.
 
 Data used to build the decision tree    :sampled-dataset.csv 
+
 Data used to test the decision tree     :original-dataset-cleaned.csv
 
 **Built Decision Tree:**
