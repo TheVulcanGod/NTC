@@ -125,11 +125,9 @@ dataset
 │   │   ├── telnet.csv
 │   │   └── x11.csv
 │   ├── original-dataset-cleaned.csv
-│   ├── README.md
 │   └── sampled-dataset.csv
 ├── dataset-22-features
 │   ├── original-dataset-cleaned.csv
-│   ├── README.md
 │   └── sampled-dataset.csv
 └── README.md
 ```
