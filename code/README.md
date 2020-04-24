@@ -768,7 +768,7 @@ X-axis: Centroids
 
 ![image](https://user-images.githubusercontent.com/29172884/80219201-c8607080-865f-11ea-8df1-1ce73c1add72.png)
 
-![image](https://user-images.githubusercontent.com/29172884/80219233-cf877e80-865f-11ea-85eb-606c61d34bc2.png)
+![image](https://user-images.githubusercontent.com/29172884/80219553-4290f500-8660-11ea-8415-cf6db59ae4cf.png)
 
 ![image](https://user-images.githubusercontent.com/29172884/80219296-e29a4e80-865f-11ea-9adc-f2b72fefc7c2.png)
 
