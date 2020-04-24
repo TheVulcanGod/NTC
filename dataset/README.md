@@ -63,7 +63,7 @@ TELNET|857|857
 X11|2013|1000
 Total|34803|10152
 
-#### Feature Engineering ####
+### Feature Engineering ###
 
 While examining features selected by PCA we figured out the packet length statics dimension were not picked up by PCA. Secondly we noticed, the edge features of min observed times were selected as additional discriminators. We saw the usage based features were selected. Hence we did manual feature engineering and arrived at 12 features. From the 22 features as listed in **Description of Dataset** above we removed the min_fpkt, max_fpkt, min_bpkt, max_bpkt, min_fiat, max_fiat, min_biat, max_biat, total_fpackets, total_bpackets, total_fvolume, total_bvolume and protocol. We added : 
 
