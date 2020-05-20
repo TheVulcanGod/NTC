@@ -1,0 +1,886 @@
+From e04146fb7be77b404640c29ab5efca7cfc4134c8 Mon Sep 17 00:00:00 2001
+From: Jayachandra Babu K <jayachandra.bab.k@hpe.com>
+Date: Mon, 10 Jun 2019 03:42:39 -0700
+Subject: [PATCH] Ovsdb server changes [ci skip]
+
+Change-Id: Ib68269327b108bf81422de861cf9f8bdafd531ad
+Signed-off-by: Jayachandra Babu K <jayachandra.bab.k@hpe.com>
+---
+
+diff --git a/halon-src/ops-openvswitch/ovsdb/column.h b/halon-src/ops-openvswitch/ovsdb/column.h
+index f12a977..727176c 100644
+--- a/halon-src/ops-openvswitch/ovsdb/column.h
++++ b/halon-src/ops-openvswitch/ovsdb/column.h
+@@ -24,6 +24,9 @@
+ #include "ovsdb-data.h"
+ #include "ovsdb-types.h"
+ 
++struct ovsdb_idl_table_statistics;
++struct ovsdb_idl_table_column_statistics;
++struct ovsdb_idl_column_statistics;
+ struct ovsdb_table;
+ struct ovsdb_table_schema;
+ 
+diff --git a/halon-src/ops-openvswitch/ovsdb/execution.c b/halon-src/ops-openvswitch/ovsdb/execution.c
+index fa5f588..7c22c43 100644
+--- a/halon-src/ops-openvswitch/ovsdb/execution.c
++++ b/halon-src/ops-openvswitch/ovsdb/execution.c
+@@ -98,6 +98,7 @@
+ static ovsdb_operation_executor ovsdb_execute_insert;
+ static ovsdb_operation_executor ovsdb_execute_upsert;
+ static ovsdb_operation_executor ovsdb_execute_select;
++static ovsdb_operation_executor ovsdb_execute_select2;
+ static ovsdb_operation_executor ovsdb_execute_update;
+ static ovsdb_operation_executor ovsdb_execute_mutate;
+ static ovsdb_operation_executor ovsdb_execute_delete;
+@@ -122,6 +123,7 @@
+         { "insert", false, ovsdb_execute_insert },
+         { "upsert", false, ovsdb_execute_upsert },
+         { "select", true, ovsdb_execute_select },
++        { "select2", true, ovsdb_execute_select2 },
+         { "update", false, ovsdb_execute_update },
+         { "mutate", false, ovsdb_execute_mutate },
+         { "delete", false, ovsdb_execute_delete },
+@@ -1084,6 +1086,55 @@
+ }
+ 
+ static struct ovsdb_error *
++ovsdb_execute_select2(struct ovsdb_execution *x, struct ovsdb_parser *parser,
++                      struct json *result, bool is_backup OVS_UNUSED)
++{
++    struct ovsdb_table *table;
++    const struct json *where, *columns_json, *sort_json;
++    struct ovsdb_condition condition = OVSDB_CONDITION_INITIALIZER(&condition);
++    struct ovsdb_column_set columns = OVSDB_COLUMN_SET_INITIALIZER;
++    struct ovsdb_column_set sort = OVSDB_COLUMN_SET_INITIALIZER;
++    struct ovsdb_error *error;
++
++    table = parse_table(x, parser, "table");
++    where = ovsdb_parser_member(parser, "where", OP_ARRAY);
++    columns_json = ovsdb_parser_member(parser, "columns",
++                                       OP_ARRAY | OP_OPTIONAL);
++    sort_json = ovsdb_parser_member(parser, "sort", OP_ARRAY | OP_OPTIONAL);
++
++    error = ovsdb_parser_get_error(parser);
++    if (!error) {
++        error = ovsdb_condition_from_json(table->schema, where, x->symtab,
++                                          &condition);
++    }
++    if (!error) {
++        error = ovsdb_column_set_from_json(columns_json, table->schema,
++                                           &columns);
++    }
++    if (!error) {
++        error = ovsdb_column_set_from_json(sort_json, table->schema, &sort);
++    }
++    if (!error) {
++        struct ovsdb_row_set rows = OVSDB_ROW_SET_INITIALIZER;
++        enum ovsdb_client_group client_group = x->session ?
++                                               x->session->client_group :
++                                               OVSDB_CLIENT_GROUP_ADMIN;
++        ovsdb_query_distinct(table, &condition, &columns, &rows, x->session);
++        ovsdb_row_set_sort(&rows, &sort);
++        json_object_put(result, "rows",
++                        ovsdb_row_stats_set_to_json(&rows, table->schema->indexes));
++
++        ovsdb_row_set_destroy(&rows);
++    }
++
++    ovsdb_column_set_destroy(&columns);
++    ovsdb_column_set_destroy(&sort);
++    ovsdb_condition_destroy(&condition);
++
++    return error;
++}
++
++static struct ovsdb_error *
+ ovsdb_execute_select(struct ovsdb_execution *x, struct ovsdb_parser *parser,
+                      struct json *result, bool is_backup OVS_UNUSED)
+ {
+diff --git a/halon-src/ops-openvswitch/ovsdb/monitor.c b/halon-src/ops-openvswitch/ovsdb/monitor.c
+index ee7c64b..be0415e 100644
+--- a/halon-src/ops-openvswitch/ovsdb/monitor.c
++++ b/halon-src/ops-openvswitch/ovsdb/monitor.c
+@@ -97,6 +97,7 @@
+ struct ovsdb_monitor_column {
+     const struct ovsdb_column *column;
+     enum ovsdb_monitor_selection select;
++    enum ovsdb_monitor_selection select2;
+     bool monitored;
+ };
+ 
+@@ -134,6 +135,7 @@
+     /* This is the union (bitwise-OR) of the 'select' values in all of the
+      * members of 'columns' below. */
+     enum ovsdb_monitor_selection select;
++    enum ovsdb_monitor_selection select2;
+ 
+     /* Columns being monitored. */
+     struct ovsdb_monitor_column *columns;
+@@ -648,6 +650,43 @@
+     return NULL;
+ }
+ 
++const char *
++ovsdb_monitor_add_stats_column(struct ovsdb_monitor *dbmon,
++                         const struct ovsdb_table *table,
++                         const struct ovsdb_column *column,
++                         enum ovsdb_monitor_selection select2,
++                         bool monitored)
++{
++    struct ovsdb_monitor_table *mt;
++    struct ovsdb_monitor_column *c;
++
++    mt = shash_find_data(&dbmon->tables, table->schema->name);
++    if (!mt) {
++        return NULL;
++    }
++    /* Check for column duplication. Return duplicated column name. */
++    if (mt->columns_index_map[column->index] != -1) {
++        return column->name;
++    }
++
++    if (mt->n_columns >= mt->allocated_columns) {
++        mt->columns = x2nrealloc(mt->columns, &mt->allocated_columns,
++                                 sizeof *mt->columns);
++    }
++
++    mt->select2 |= select2;
++    mt->columns_index_map[column->index] = mt->n_columns;
++    c = &mt->columns[mt->n_columns++];
++    c->column  = column;
++    c->select2 = select2;
++    c->monitored = monitored;
++
++    if (monitored) {
++        mt->n_monitored_columns++;
++    }
++    return NULL;
++}
++
+ static void
+ ovsdb_monitor_condition_add_columns(struct ovsdb_monitor *dbmon,
+                                     const struct ovsdb_table *table,
+diff --git a/halon-src/ops-openvswitch/ovsdb/query.h b/halon-src/ops-openvswitch/ovsdb/query.h
+index fd25094..90fa5a8 100644
+--- a/halon-src/ops-openvswitch/ovsdb/query.h
++++ b/halon-src/ops-openvswitch/ovsdb/query.h
+@@ -1,4 +1,4 @@
+-/* (c) Copyright 2019 Hewlett Packard Enterprise Development LP
++/* (c) Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+  * Copyright (c) 2009 Nicira, Inc.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+@@ -24,6 +24,9 @@
+ struct ovsdb_condition;
+ struct ovsdb_row;
+ struct ovsdb_row_set;
++struct ovsdb_idl_table_statistics;
++struct ovsdb_idl_column_statistics;
++struct ovsdb_idl_table_column_statistics;
+ struct ovsdb_table;
+ struct ovsdb_txn;
+ 
+diff --git a/halon-src/ops-openvswitch/ovsdb/row.c b/halon-src/ops-openvswitch/ovsdb/row.c
+index 54e7f95..4578d6b 100644
+--- a/halon-src/ops-openvswitch/ovsdb/row.c
++++ b/halon-src/ops-openvswitch/ovsdb/row.c
+@@ -349,6 +349,107 @@
+                                         &column->type));
+ }
+ 
++long
++get_clock_microseconds() {
++    struct timeval currentTime;
++
++    gettimeofday(&currentTime, NULL);
++    return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
++}
++
++long
++get_clock_nanoseconds() {
++    struct timespec spec;
++
++    clock_gettime(CLOCK_REALTIME, &spec);
++    return ((spec.tv_sec * (int)1e9) + spec.tv_nsec);
++}
++
++struct json *
++ovsdb_column_stats_to_json(struct json *json,
++                           struct ovsdb_idl_column_statistics *col_stats) {
++    struct json *json_columns;
++
++    json_columns = json_object_create();
++
++    json_object_put(json_columns, "modified_count",
++                    json_integer_create(col_stats->modified_count));
++    json_object_put(json_columns, "min_value",
++                    json_integer_create(col_stats->min_value));
++    json_object_put(json_columns, "max_value",
++                    json_integer_create(col_stats->max_value));
++    json_object_put(json_columns, "mean_value",
++                    json_integer_create(col_stats->mean_value));
++
++    json_object_put(json, col_stats->name, json_columns);
++}
++
++struct json *
++ovsdb_row_stats_to_json(const struct ovsdb_row *row,
++                        const struct ovsdb_column_set *columns,
++                        struct ovsdb_idl_table_statistics *table_stats)
++{
++    struct json *json;
++    size_t i;
++    struct shash_node * shash_node;
++
++    json = json_object_create();
++    for (i = 0; i < columns->n_columns; i++) {
++        put_json_column(json, row, columns->columns[i]);
++    }
++    if (table_stats != NULL) {
++        json_object_put(json, "inserted_count",
++                        json_integer_create(table_stats->inserted_count));
++        json_object_put(json, "deleted_count",
++                        json_integer_create(table_stats->deleted_count));
++        json_object_put(json, "last_insert_time",
++                        json_integer_create(table_stats->last_insert_time));
++        json_object_put(json, "last_delete_time",
++                        json_integer_create(table_stats->last_delete_time));
++        json_object_put(json, "last_modified_time",
++                        json_integer_create(table_stats->last_modified_time));
++
++        /* Calculate UP time */
++        table_stats->up_time += difftime(get_clock_nanoseconds(),
++                                         table_stats->last_toggle_time);
++        table_stats->last_toggle_time = get_clock_nanoseconds();
++
++        json_object_put(json, "up_time",
++                        json_integer_create(table_stats->up_time));
++        json_object_put(json, "down_time",
++                        json_integer_create(table_stats->down_time));
++        SHASH_FOR_EACH(shash_node, &table_stats->integer_columns) {
++            struct ovsdb_idl_column_statistics *col_stats = shash_node->data;
++            if (col_stats == NULL) {
++                continue;
++            }
++            ovsdb_column_stats_to_json(json, col_stats);
++        }
++    }
++    return json;
++}
++
++struct json *
++ovsdb_table_statistics_to_json(struct json *json,
++           struct ovsdb_idl_table_column_statistics *table_col_stats)
++{
++    struct json *json_table_columns;
++    size_t i;
++    struct shash_node * shash_node;
++
++    json_table_columns = json_object_create();
++
++    if (table_col_stats != NULL) {
++        json_object_put(json_table_columns, "row_count",
++                        json_integer_create(table_col_stats->row_count));
++        json_object_put(json_table_columns, "average_value",
++                        json_integer_create(table_col_stats->average_value));
++        json_object_put(json_table_columns, "current_value",
++                        json_integer_create(table_col_stats->current_value));
++    }
++    json_object_put(json, table_col_stats->name, json_table_columns);
++}
++
+ struct json *
+ ovsdb_row_to_json(const struct ovsdb_row *row,
+                   const struct ovsdb_column_set *columns,
+@@ -403,6 +504,60 @@
+     }
+ }
+ 
++static struct ovsdb_idl_table_statistics *
++ovsdb_row_find_table_stats_entry(const struct ovsdb_table *table, uint32_t hash)
++{
++    struct ovsdb_idl_table_statistics *table_stats;
++
++    HMAP_FOR_EACH_WITH_HASH (table_stats, stats_node,
++                             hash, &table->indexed_statistics) {
++        return table_stats;
++    }
++    return NULL;
++}
++
++struct json *
++ovsdb_table_col_stats_to_json(const struct ovsdb_table *table,
++                          struct ovsdb_idl_table_statistics *table_stats) {
++    struct json *json;
++    struct shash_node *shash_node;
++
++    json = json_object_create();
++
++    if (table_stats != NULL) {
++        SHASH_FOR_EACH(shash_node, &table->table_integer_columns) {
++            struct ovsdb_idl_table_column_statistics *table_col_stats = shash_node->data;
++            if (table_col_stats == NULL) {
++                continue;
++            }
++            ovsdb_table_statistics_to_json(json, table_col_stats);
++        }
++    }
++    return json;
++}
++
++struct json *
++ovsdb_row_stats_set_to_json(const struct ovsdb_row_set *rows,
++                            const struct ovsdb_column_set *columns)
++{
++    struct json **json_rows;
++    size_t i;
++    struct ovsdb_idl_table_statistics *table_stats = NULL;
++    uint32_t stats_hash = 0;
++
++    json_rows = xmalloc((rows->n_rows +1 ) * sizeof *json_rows);
++    for (i = 0; i < rows->n_rows; i++) {
++        stats_hash = ovsdb_row_hash_columns(rows->rows[i], columns, 0);
++        table_stats = ovsdb_row_find_table_stats_entry(rows->rows[i]->table, stats_hash);
++        json_rows[i] = ovsdb_row_stats_to_json(rows->rows[i], columns, table_stats);
++    }
++
++    json_rows[i] = ovsdb_table_col_stats_to_json(rows->rows[0]->table,
++                                                 table_stats);
++
++    return json_array_create(json_rows, (rows->n_rows +1));
++}
++
+ struct json *
+ ovsdb_row_set_to_json(const struct ovsdb_row_set *rows,
+                       const struct ovsdb_column_set *columns,
+diff --git a/halon-src/ops-openvswitch/ovsdb/row.h b/halon-src/ops-openvswitch/ovsdb/row.h
+index 7ca25a4..ea35a95 100644
+--- a/halon-src/ops-openvswitch/ovsdb/row.h
++++ b/halon-src/ops-openvswitch/ovsdb/row.h
+@@ -169,6 +169,8 @@
+ struct json *ovsdb_row_set_to_json(const struct ovsdb_row_set *,
+                                    const struct ovsdb_column_set *,
+                                    const enum ovsdb_client_group client_group);
++struct json *ovsdb_row_stats_set_to_json(const struct ovsdb_row_set *,
++                                         const struct ovsdb_column_set *);
+ 
+ void ovsdb_row_set_sort(struct ovsdb_row_set *,
+                         const struct ovsdb_column_set *);
+@@ -204,6 +206,8 @@
+                                const struct ovsdb_row *, size_t hash);
+ bool ovsdb_row_hash_insert__(struct ovsdb_row_hash *,
+                              const struct ovsdb_row *, size_t hash);
++long get_clock_microseconds();
++long get_clock_nanoseconds();
+ 
+ void ovsdb_filter_internal_refs(const struct ovsdb_column *column,
+                                        struct ovsdb_datum *datum);
+diff --git a/halon-src/ops-openvswitch/ovsdb/table.c b/halon-src/ops-openvswitch/ovsdb/table.c
+index 4423fda..ad18464 100644
+--- a/halon-src/ops-openvswitch/ovsdb/table.c
++++ b/halon-src/ops-openvswitch/ovsdb/table.c
+@@ -135,7 +135,8 @@
+ 
+ struct ovsdb_table_schema *
+ ovsdb_table_schema_create(const char *name, bool mutable,
+-                          unsigned int max_rows, bool is_root)
++                          unsigned int max_rows, bool is_root,
++                          bool is_dbstats_enabled)
+ {
+     struct ovsdb_column *uuid, *version, *permission;
+     struct ovsdb_table_schema *ts;
+@@ -146,6 +147,7 @@
+     shash_init(&ts->columns);
+     ts->max_rows = max_rows;
+     ts->is_root = is_root;
++    ts->is_dbstats_enabled = is_dbstats_enabled;
+ 
+     uuid = ovsdb_column_create("_uuid", false, true, &ovsdb_type_uuid);
+     add_column(ts, uuid);
+@@ -174,7 +176,8 @@
+     size_t i;
+ 
+     new = ovsdb_table_schema_create(old->name, old->mutable,
+-                                    old->max_rows, old->is_root);
++                                    old->max_rows, old->is_root,
++                                    old->is_dbstats_enabled);
+     SHASH_FOR_EACH (node, &old->columns) {
+         const struct ovsdb_column *column = node->data;
+ 
+@@ -230,7 +233,7 @@
+                              struct ovsdb_table_schema **tsp)
+ {
+     struct ovsdb_table_schema *ts;
+-    const struct json *columns, *mutable, *max_rows, *is_root, *indexes;
++    const struct json *columns, *mutable, *max_rows, *is_root, *indexes, *is_dbstats_enabled;
+     struct shash_node *node;
+     struct ovsdb_parser parser;
+     struct ovsdb_error *error;
+@@ -245,6 +248,7 @@
+     max_rows = ovsdb_parser_member(&parser, "maxRows",
+                                    OP_INTEGER | OP_OPTIONAL);
+     is_root = ovsdb_parser_member(&parser, "isRoot", OP_BOOLEAN | OP_OPTIONAL);
++    is_dbstats_enabled = ovsdb_parser_member(&parser, "dbStats", OP_BOOLEAN | OP_OPTIONAL);
+     indexes = ovsdb_parser_member(&parser, "indexes", OP_ARRAY | OP_OPTIONAL);
+     error = ovsdb_parser_finish(&parser);
+     if (error) {
+@@ -271,7 +275,8 @@
+     ts = ovsdb_table_schema_create(name,
+                                    mutable ? json_boolean(mutable) : true,
+                                    MIN(n_max_rows, UINT_MAX),
+-                                   is_root ? json_boolean(is_root) : false);
++                                   is_root ? json_boolean(is_root) : false,
++                                   is_dbstats_enabled ? json_boolean(is_dbstats_enabled) : false);
+     SHASH_FOR_EACH (node, json_object(columns)) {
+         struct ovsdb_column *column;
+ 
+@@ -362,6 +367,7 @@
+     if (default_is_root != ts->is_root) {
+         json_object_put(json, "isRoot", json_boolean_create(ts->is_root));
+     }
++    json_object_put(json, "dbStats", json_boolean_create(ts->is_dbstats_enabled));
+ 
+     columns = json_object_create();
+ 
+@@ -414,6 +420,8 @@
+         hmap_init(&table->indexes[i]);
+     }
+     hmap_init(&table->rows);
++    hmap_init(&table->indexed_statistics);
++    shash_init(&table->table_integer_columns);
+     list_init(&table->sorted_row_list);
+     table->paging_count = 0;
+ 
+diff --git a/halon-src/ops-openvswitch/ovsdb/table.h b/halon-src/ops-openvswitch/ovsdb/table.h
+index d85e1f7..857e617 100644
+--- a/halon-src/ops-openvswitch/ovsdb/table.h
++++ b/halon-src/ops-openvswitch/ovsdb/table.h
+@@ -33,13 +33,15 @@
+     struct shash columns;       /* Contains "struct ovsdb_column *"s. */
+     unsigned int max_rows;      /* Maximum number of rows. */
+     bool is_root;               /* Part of garbage collection root set? */
++    bool is_dbstats_enabled;
+     struct ovsdb_column_set *indexes;
+     size_t n_indexes;
+     bool ha_sync_version;
+ };
+ 
+ struct ovsdb_table_schema *ovsdb_table_schema_create(
+-    const char *name, bool mutable, unsigned int max_rows, bool is_root);
++    const char *name, bool mutable, unsigned int max_rows, bool is_root,
++    bool is_dbstats_enabled);
+ struct ovsdb_table_schema *ovsdb_table_schema_clone(
+     const struct ovsdb_table_schema *);
+ void ovsdb_table_schema_destroy(struct ovsdb_table_schema *);
+@@ -56,12 +58,43 @@
+ 
+ /* Database table. */
+ 
++#define MAX_COLUMN_NAME_LEN 256
++struct ovsdb_idl_table_column_statistics {
++    char     name[MAX_COLUMN_NAME_LEN + 1];
++    uint32_t row_count;
++    uint32_t average_value;
++    uint64_t current_value;
++} ovsdb_idl_table_column_statistics_s;
++
++struct ovsdb_idl_column_statistics {
++    char     name[MAX_COLUMN_NAME_LEN + 1];
++    uint32_t modified_count;
++    uint32_t min_value;
++    uint32_t max_value;
++    uint32_t mean_value;
++    uint64_t current_value;
++} ovsdb_idl_column_statistics_s;
++
++struct ovsdb_idl_table_statistics {
++     struct hmap_node stats_node;
++     uint32_t         inserted_count;
++     uint32_t         deleted_count;
++     long             last_toggle_time;
++     long             up_time;
++     long             down_time;
++     long             last_insert_time;
++     long             last_delete_time;
++     long             last_modified_time;
++     struct shash     integer_columns;
++};
++
+ struct ovsdb_table {
+     struct ovsdb_table_schema *schema;
+     struct ovsdb_txn_table *txn_table; /* Only if table is in a transaction. */
+     struct ovs_list sorted_row_list;
+     struct hmap rows;           /* Contains "struct ovsdb_row"s. */
+-
++    struct hmap indexed_statistics;
++    struct shash table_integer_columns;
+     /* An array of schema->n_indexes hmaps, each of which contains "struct
+      * ovsdb_row"s.  Each of the hmap_nodes in indexes[i] are at index 'i' at
+      * the end of struct ovsdb_row, following the 'fields' member. */
+diff --git a/halon-src/ops-openvswitch/ovsdb/transaction.c b/halon-src/ops-openvswitch/ovsdb/transaction.c
+index 16d8463..f0f754f 100644
+--- a/halon-src/ops-openvswitch/ovsdb/transaction.c
++++ b/halon-src/ops-openvswitch/ovsdb/transaction.c
+@@ -1914,6 +1914,59 @@
+     return txn_row;
+ }
+ 
++/*########################################################################
++ * Table level column stats
++ *########################################################################*/
++struct ovsdb_idl_table_column_statistics *
++find_table_integer_column_shash_entry(const struct ovsdb_table *table,
++                                      char                     *column_name) {
++    return shash_find_data(&table->table_integer_columns, column_name);
++}
++
++struct ovsdb_idl_table_column_statistics *
++create_table_integer_column_shash_entry(const struct ovsdb_table *table,
++                                        char                     *column_name) {
++    struct ovsdb_idl_table_column_statistics *table_col_stats;
++
++    table_col_stats = xzalloc(sizeof(struct ovsdb_idl_table_column_statistics));
++    strncpy(table_col_stats->name, column_name, MAX_COLUMN_NAME_LEN);
++    shash_add(&table->table_integer_columns, table_col_stats->name, table_col_stats);
++
++    return table_col_stats;
++}
++
++/*########################################################################
++ *Row level column stats
++ *########################################################################*/
++struct ovsdb_idl_column_statistics *
++find_integer_column_shash_entry(struct ovsdb_idl_table_statistics *table_stats,
++                                char                     *column_name) {
++    return shash_find_data(&table_stats->integer_columns, column_name);
++}
++
++struct ovsdb_idl_column_statistics *
++create_integer_column_shash_entry(struct ovsdb_idl_table_statistics *table_stats,
++                                  char                     *column_name) {
++    struct ovsdb_idl_column_statistics *col_stats;
++
++    col_stats = xzalloc(sizeof(struct ovsdb_idl_column_statistics));
++    strncpy(col_stats->name, column_name, MAX_COLUMN_NAME_LEN);
++    shash_add(&table_stats->integer_columns, col_stats->name, col_stats);
++
++    return col_stats;
++}
++
++static struct ovsdb_idl_table_statistics *
++find_table_stats_entry(const struct ovsdb_table *table, uint32_t hash)
++{
++    struct ovsdb_idl_table_statistics *table_stats;
++
++    HMAP_FOR_EACH_WITH_HASH(table_stats, stats_node,
++                            hash, &table->indexed_statistics) {
++        return table_stats;
++    }
++    return NULL;
++}
+ 
+ struct ovsdb_row *
+ ovsdb_txn_row_modify(struct ovsdb_txn *txn, const struct ovsdb_row *ro_row_)
+@@ -1926,6 +1979,9 @@
+     } else {
+         struct ovsdb_table *table = ro_row->table;
+         struct ovsdb_row *rw_row;
++        struct ovsdb_idl_table_statistics *table_stats;
++        uint32_t stats_hash = 0;
++        struct shash_node * shash_node;
+ 
+         rw_row = ovsdb_row_clone(ro_row);
+         rw_row->n_refs = ro_row->n_refs;
+@@ -1933,6 +1989,85 @@
+ 
+         hmap_replace(&table->rows, &ro_row->hmap_node, &rw_row->hmap_node);
+ 
++        if (table->schema && table->schema->indexes &&
++                table->schema->is_dbstats_enabled) {
++            stats_hash = ovsdb_row_hash_columns(rw_row, table->schema->indexes, 0);
++            table_stats = find_table_stats_entry(table, stats_hash);
++            if (table_stats != NULL) {
++                table_stats->last_modified_time = get_clock_nanoseconds();
++
++                SHASH_FOR_EACH(shash_node, &table->schema->columns) {
++                    struct ovsdb_column *column = NULL;
++                    struct ovsdb_idl_column_statistics *col_stats;
++                    struct ovsdb_idl_table_column_statistics *table_col_stats;
++
++                    column = shash_node->data;
++                    if ((column == NULL) || (column->name == NULL) || (column->type.key.type != OVSDB_TYPE_INTEGER) ||
++                        (strcmp("_permission", column->name) == 0) || (column->type.value.type != OVSDB_TYPE_VOID)) {
++                        continue;
++                    }
++                    /* ################################################## */
++                    /* Per table Column stats */
++                    /* ################################################## */
++                    table_col_stats = find_table_integer_column_shash_entry(
++                                              table, column->name);
++                    if (table_col_stats == NULL) {
++                        table_col_stats = create_table_integer_column_shash_entry(
++                                                  table, column->name);
++                        if (rw_row && rw_row->fields &&
++                            rw_row->fields[column->index].keys) {
++                            table_col_stats->row_count++;
++                            table_col_stats->current_value = rw_row->fields[column->index].keys[0].integer;
++                            table_col_stats->average_value = rw_row->fields[column->index].keys[0].integer;
++                        }
++                    } else {
++                        if (rw_row && rw_row->fields &&
++                            rw_row->fields[column->index].keys) {
++                            if (table_col_stats->row_count != 0) {
++                                table_col_stats->average_value = (((table_col_stats->average_value) * (table_col_stats->row_count)) + (rw_row->fields[column->index].keys[0].integer) - (table_col_stats->current_value)) / (table_col_stats->row_count);
++                            } else {
++                                table_col_stats->average_value = 0;
++                            }
++                        }
++                    }
++
++                    /* ################################################## */
++                    /* Per row Column stats */
++                    /* ################################################## */
++                    col_stats = find_integer_column_shash_entry(table_stats,
++                                                                column->name);
++                    if (col_stats == NULL) {
++                        col_stats = create_integer_column_shash_entry(table_stats,
++                                                                      column->name);
++                        if (rw_row && rw_row->fields &&
++                            rw_row->fields[column->index].keys) {
++                            col_stats->min_value = rw_row->fields[column->index].keys[0].integer;
++                            col_stats->max_value = rw_row->fields[column->index].keys[0].integer;
++                            col_stats->mean_value = rw_row->fields[column->index].keys[0].integer;
++                            col_stats->current_value = rw_row->fields[column->index].keys[0].integer;
++                            col_stats->modified_count++;
++                        }
++                    } else {
++                        if (rw_row && rw_row->fields &&
++                            rw_row->fields[column->index].keys) {
++                            if (col_stats->current_value != rw_row->fields[column->index].keys[0].integer) {
++                                col_stats->current_value = rw_row->fields[column->index].keys[0].integer;
++                                col_stats->mean_value = ((col_stats->mean_value * col_stats->modified_count) + rw_row->fields[column->index].keys[0].integer) / (col_stats->modified_count + 1);
++                                col_stats->modified_count++;
++
++                                if (col_stats->min_value > rw_row->fields[column->index].keys[0].integer) {
++                                    col_stats->min_value = rw_row->fields[column->index].keys[0].integer;
++                                }
++
++                                if (col_stats->max_value < rw_row->fields[column->index].keys[0].integer) {
++                                    col_stats->max_value = rw_row->fields[column->index].keys[0].integer;
++                                }
++                            }
++                        }
++                    }
++                }
++            }
++        }
+         return rw_row;
+     }
+ }
+@@ -1942,11 +2077,90 @@
+ {
+     uint32_t hash = ovsdb_row_hash(row);
+     struct ovsdb_table *table = row->table;
++    struct ovsdb_idl_table_statistics *table_stats = NULL;
++    uint32_t stats_hash = 0;
++    struct shash_node * shash_node;
+ 
+     uuid_generate(ovsdb_row_get_version_rw(row));
+ 
+     ovsdb_txn_row_create(txn, table, NULL, row);
+     hmap_insert(&table->rows, &row->hmap_node, hash);
++
++    if (table->schema && table->schema->indexes &&
++                table->schema->is_dbstats_enabled) {
++        long current_time = get_clock_nanoseconds();
++        stats_hash = ovsdb_row_hash_columns(row, table->schema->indexes, 0);
++        table_stats = find_table_stats_entry(table, stats_hash);
++        if (table_stats == NULL) {
++            table_stats = xzalloc(sizeof(struct ovsdb_idl_table_statistics));
++            hmap_insert(&table->indexed_statistics, &table_stats->stats_node, stats_hash);
++            table_stats->last_toggle_time = current_time;
++            table_stats->last_insert_time = current_time;
++            shash_init(&table_stats->integer_columns);
++        }
++        if (table_stats != NULL) {
++            if (table_stats->inserted_count > 0) {
++                table_stats->down_time += difftime(current_time,
++                                                   table_stats->last_toggle_time);
++            }
++            table_stats->last_toggle_time = current_time;
++            table_stats->last_insert_time = current_time;
++            table_stats->inserted_count++;
++        }
++
++        SHASH_FOR_EACH(shash_node, &table->schema->columns) {
++            struct ovsdb_column *column = NULL;
++            struct ovsdb_idl_column_statistics *col_stats;
++            struct ovsdb_idl_table_column_statistics *table_col_stats;
++
++            column = shash_node->data;
++            if ((column == NULL) || (column->name == NULL) || (column->type.key.type != OVSDB_TYPE_INTEGER) ||
++                (strcmp("_permission", column->name) == 0) || (column->type.value.type != OVSDB_TYPE_VOID)) {
++                continue;
++            }
++            /* ################################################## */
++            /* Per table Column stats */
++            /* ################################################## */
++            table_col_stats = find_table_integer_column_shash_entry(
++                                      table, column->name);
++            if (table_col_stats == NULL) {
++                table_col_stats = create_table_integer_column_shash_entry(
++                                          table, column->name);
++                if (row && row->fields &&
++                    row->fields[column->index].keys) {
++                    table_col_stats->row_count++;
++                    table_col_stats->current_value = row->fields[column->index].keys[0].integer;
++                    table_col_stats->average_value = row->fields[column->index].keys[0].integer;
++                }
++            } else {
++                if (row && row->fields &&
++                    row->fields[column->index].keys) {
++                    table_col_stats->average_value = (((table_col_stats->average_value) * (table_col_stats->row_count)) + row->fields[column->index].keys[0].integer) / (table_col_stats->row_count + 1);
++                    table_col_stats->row_count++;
++                    table_col_stats->current_value = row->fields[column->index].keys[0].integer;
++                }
++            }
++
++            /* ################################################## */
++            /* Per row Column stats */
++            /* ################################################## */
++            col_stats = find_integer_column_shash_entry(table_stats,
++                                                        column->name);
++            if (col_stats == NULL) {
++                col_stats = create_integer_column_shash_entry(table_stats,
++                                                 column->name);
++            }
++
++            if (row && row->fields &&
++                row->fields[column->index].keys) {
++                col_stats->min_value = row->fields[column->index].keys[0].integer;
++                col_stats->max_value = row->fields[column->index].keys[0].integer;
++                col_stats->mean_value = row->fields[column->index].keys[0].integer;
++                col_stats->current_value = row->fields[column->index].keys[0].integer;
++                col_stats->modified_count++;
++            }
++        }
++    }
+ }
+ 
+ /* 'row' must be assumed destroyed upon return; the caller must not reference
+@@ -1957,6 +2171,60 @@
+     struct ovsdb_row *row = CONST_CAST(struct ovsdb_row *, row_);
+     struct ovsdb_table *table = row->table;
+     struct ovsdb_txn_row *txn_row = row->txn_row;
++    struct ovsdb_idl_table_statistics *table_stats;
++    uint32_t stats_hash = 0;
++    struct shash_node * shash_node;
++
++    if (table->schema && table->schema->indexes &&
++        table->schema->is_dbstats_enabled) {
++        long current_time = get_clock_nanoseconds();
++        stats_hash = ovsdb_row_hash_columns(row, table->schema->indexes, 0);
++        table_stats = find_table_stats_entry(table, stats_hash);
++        if (table_stats != NULL) {
++            table_stats->up_time += difftime(current_time,
++                                             table_stats->last_toggle_time);
++            table_stats->deleted_count++;
++            table_stats->last_toggle_time = current_time;
++            table_stats->last_delete_time = current_time;
++            SHASH_FOR_EACH(shash_node, &table_stats->integer_columns) {
++                struct ovsdb_idl_column_statistics *col_stats = shash_node->data;
++                if (col_stats == NULL) {
++                    continue;
++                }
++                memset(col_stats, 0, sizeof(struct ovsdb_idl_column_statistics));
++            }
++            SHASH_FOR_EACH(shash_node, &table->schema->columns) {
++                struct ovsdb_column *column = NULL;
++                struct ovsdb_idl_table_column_statistics *table_col_stats;
++
++                column = shash_node->data;
++                if ((column == NULL) || (column->name == NULL) || (column->type.key.type != OVSDB_TYPE_INTEGER) ||
++                    (strcmp("_permission", column->name) == 0) || (column->type.value.type != OVSDB_TYPE_VOID)) {
++                    continue;
++                }
++
++                /* ################################################## */
++                /* Per table Column stats */
++                /* ################################################## */
++                table_col_stats = find_table_integer_column_shash_entry(
++                                          table, column->name);
++                if (table_col_stats == NULL) {
++                    continue;
++                }
++
++                if (row && row->fields &&
++                    row->fields[column->index].keys) {
++                    if (table_col_stats->row_count > 1) {
++                        table_col_stats->average_value = (((table_col_stats->average_value) * (table_col_stats->row_count)) - row->fields[column->index].keys[0].integer) / (table_col_stats->row_count - 1);
++                        table_col_stats->row_count--;
++                    } else {
++                        table_col_stats->average_value = 0;
++                        table_col_stats->row_count = 0;
++                    }
++                }
++            }
++        }
++    }
+ 
+     if (txn_row && txn_row->old && !txn_row->new &&
+         row == txn_row->old) {
+diff --git a/halon-src/ops-openvswitch/ovsdb/transaction.h b/halon-src/ops-openvswitch/ovsdb/transaction.h
+index a20c8d5..23f6e67 100644
+--- a/halon-src/ops-openvswitch/ovsdb/transaction.h
++++ b/halon-src/ops-openvswitch/ovsdb/transaction.h
+@@ -24,6 +24,9 @@
+ 
+ struct json;
+ struct ovsdb;
++struct ovsdb_idl_table_statistics;
++struct ovsdb_idl_column_statistics;
++struct ovsdb_idl_table_column_statistics;
+ struct ovsdb_table;
+ struct uuid;
+ struct hmap;
+diff --git a/halon-src/ops-openvswitch/python/ovs/db/schema.py b/halon-src/ops-openvswitch/python/ovs/db/schema.py
+index d6ec955..87b769b 100644
+--- a/halon-src/ops-openvswitch/python/ovs/db/schema.py
++++ b/halon-src/ops-openvswitch/python/ovs/db/schema.py
+@@ -194,6 +194,7 @@
+         mutable = parser.get_optional("mutable", [bool], True)
+         max_rows = parser.get_optional("maxRows", [int, dict])
+         is_root = parser.get_optional("isRoot", [bool], False)
++        is_dbstats_enabled = parser.get_optional("dbStats", [bool], False)
+         indexes_json = parser.get_optional("indexes", [list], [])
+         capability_list = parser.get_optional("capability_list", [list], None)
+         parser.finish()
+@@ -252,6 +253,7 @@
+         if default_is_root != self.is_root:
+             json["isRoot"] = self.is_root
+ 
++        json["dbStats"] = self.is_dbstats_enabled
+         json["columns"] = columns = {}
+         for column in self.columns.itervalues():
+             if not column.name.startswith("_"):
+diff --git a/halon-src/ops/schema/lib/ovs/db/schema.py b/halon-src/ops/schema/lib/ovs/db/schema.py
+index 1758380..a6c3395 100644
+--- a/halon-src/ops/schema/lib/ovs/db/schema.py
++++ b/halon-src/ops/schema/lib/ovs/db/schema.py
+@@ -194,6 +194,7 @@
+         mutable = parser.get_optional("mutable", [bool], True)
+         max_rows = parser.get_optional("maxRows", [int, dict])
+         is_root = parser.get_optional("isRoot", [bool], False)
++        is_dbstats_enabled = parser.get_optional("dbStats", [bool], False)
+         indexes_json = parser.get_optional("indexes", [list], [])
+         capability_list = parser.get_optional("capability_list", [list], None)
+         parser.finish()
+@@ -252,6 +253,7 @@
+         if default_is_root != self.is_root:
+             json["isRoot"] = self.is_root
+ 
++        json["dbStats"] = self.is_dbstats_enabled
+         json["columns"] = columns = {}
+         for column in self.columns.itervalues():
+             if not column.name.startswith("_"):
